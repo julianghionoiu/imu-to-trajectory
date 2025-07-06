@@ -1,0 +1,3 @@
+Rotations (360) along the Y axis. 3x counterclockwise, 3x clockwise.
+The rotation happens with the axis aligned with the gravity field.
+Pause between a 360 rotation.

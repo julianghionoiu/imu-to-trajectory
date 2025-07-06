@@ -2,13 +2,19 @@ import pandas as pd
 import numpy as np
 import json
 from scipy.interpolate import interp1d
+
+import matplotlib
+matplotlib.use('TkAgg')
+
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
 
+
 # === Load Data ===
-acc_df = pd.read_csv("./devices/E0A8AD21/gyr_calibration/zrot_acc.data", sep=r'\s+', names=["timestamp", "acc_x", "acc_y", "acc_z"], header=0)
-gyro_df = pd.read_csv("./devices/E0A8AD21/gyr_calibration/zrot_gyr.data", sep=r'\s+', names=["timestamp", "gyro_x", "gyro_y", "gyro_z"], header=0)
-mag_df = pd.read_csv("./devices/E0A8AD21/gyr_calibration/zrot_mag.data", sep=r'\s+', names=["timestamp", "mag_x", "mag_y", "mag_z"], header=0)
+base_dir = "./devices/E0A8AD21/gyr_calibration/zrot/"
+acc_df = pd.read_csv(base_dir+"acc.data", sep=r'\s+', names=["timestamp", "acc_x", "acc_y", "acc_z"], header=0)
+gyro_df = pd.read_csv(base_dir+"gyr.data", sep=r'\s+', names=["timestamp", "gyro_x", "gyro_y", "gyro_z"], header=0)
+mag_df = pd.read_csv(base_dir+"mag.data", sep=r'\s+', names=["timestamp", "mag_x", "mag_y", "mag_z"], header=0)
 
 # Normalize timestamps
 base_time = min(acc_df["timestamp"].min(), gyro_df["timestamp"].min(), mag_df["timestamp"].min())
@@ -63,12 +69,21 @@ def integrate_gyro(q, gyro, dt):
 
 # Initial orientation
 def acc_mag_to_quaternion(acc, mag):
+    # Normalize accelerometer and magnetometer
     g = acc / np.linalg.norm(acc)
     m = mag / np.linalg.norm(mag)
-    e = np.cross(m, g); e /= np.linalg.norm(e)
-    n = np.cross(g, e); n /= np.linalg.norm(n)
-    R_mat = np.column_stack((n, e, -g))
-    return R.from_matrix(R_mat).as_quat()  # scipy format: [x, y, z, w]
+
+    # Calculate East and North vectors
+    east = np.cross(m, g)
+    east /= np.linalg.norm(east)
+
+    north = np.cross(g, east)
+
+    # Construct rotation matrix (column-wise: X=East, Y=North, Z=Up)
+    R_mat = np.column_stack((east, north, g))
+
+    # Convert to quaternion (returns [x, y, z, w])
+    return R.from_matrix(R_mat).as_quat()
 
 N = len(common_time)
 q = np.roll(acc_mag_to_quaternion(acc[0], mag[0]), 1)  # roll w to front
@@ -111,7 +126,7 @@ gravity_sensor = np.array([quat_to_rotmat(q).T @ g_ref for q in quaternions])
 motion_acc = acc - gravity_sensor
 
 # === Plotting ===
-fig, axs = plt.subplots(5, 1, figsize=(12, 12), sharex=True)
+fig, axs = plt.subplots(6, 1, figsize=(12, 12), sharex=True)
 
 axs[0].plot(common_time, gyro)
 axs[0].set_ylabel('Gyro (rad/s)')
@@ -135,9 +150,16 @@ axs[3].legend(['X', 'Y', 'Z'])
 axs[3].set_title('Gravity Removed Acceleration')
 
 axs[4].plot(common_time, euler_angles)
-axs[4].set_ylabel('Angle (deg)')
+axs[4].set_ylabel('Angle wrapped (deg)')
 axs[4].legend(['Roll', 'Pitch', 'Yaw'])
 axs[4].set_title('Euler Angles (EKF)')
+
+euler_unwrapped = np.unwrap(np.radians(euler_angles), axis=0)
+euler_unwrapped_deg = np.degrees(euler_unwrapped)
+axs[5].plot(common_time, euler_unwrapped_deg)
+axs[5].set_ylabel('Angle unwrapped (deg)')
+axs[5].legend(['Roll', 'Pitch', 'Yaw'])
+axs[5].set_title('Euler Angles (EKF)')
 
 plt.grid(True)
 plt.tight_layout()
