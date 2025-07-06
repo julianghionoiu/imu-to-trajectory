@@ -2,15 +2,20 @@ import pandas as pd
 import numpy as np
 import json
 from scipy.interpolate import interp1d
+
+import matplotlib
+matplotlib.use('TkAgg')
+
 import matplotlib.pyplot as plt
 from ahrs.filters import Madgwick
 from ahrs.common.orientation import q2R
 from scipy.spatial.transform import Rotation as R
 
 # === Load Data ===
-acc_df = pd.read_csv("./devices/E0A8AD21/gyr_calibration/zrot_acc.data", sep=r'\s+', names=["timestamp", "acc_x", "acc_y", "acc_z"], header=0)
-gyro_df = pd.read_csv("./devices/E0A8AD21/gyr_calibration/zrot_gyr.data", sep=r'\s+', names=["timestamp", "gyro_x", "gyro_y", "gyro_z"], header=0)
-mag_df = pd.read_csv("./devices/E0A8AD21/gyr_calibration/zrot_mag.data", sep=r'\s+', names=["timestamp", "mag_x", "mag_y", "mag_z"], header=0)
+base_dir = "./devices/E0A8AD21/gyr_calibration/zrot/"
+acc_df = pd.read_csv(base_dir+"acc.data", sep=r'\s+', names=["timestamp", "acc_x", "acc_y", "acc_z"], header=0)
+gyro_df = pd.read_csv(base_dir+"gyr.data", sep=r'\s+', names=["timestamp", "gyro_x", "gyro_y", "gyro_z"], header=0)
+mag_df = pd.read_csv(base_dir+"mag.data", sep=r'\s+', names=["timestamp", "mag_x", "mag_y", "mag_z"], header=0)
 
 # Normalize timestamps to seconds since start
 base_time = min(acc_df["timestamp"].min(), gyro_df["timestamp"].min(), mag_df["timestamp"].min())
@@ -114,7 +119,7 @@ mag_raw_interp = interpolate(mag_df.assign(mag_x=mag_raw[:,0], mag_y=mag_raw[:,1
 mag_raw_vals = mag_raw_interp[["mag_x", "mag_y", "mag_z"]].values
 
 # === Plot IMU Data: Gyro, Acc, Mag (with raw mag) ===
-fig, axs = plt.subplots(5, 1, figsize=(12, 12), sharex=True)
+fig, axs = plt.subplots(6, 1, figsize=(12, 12), sharex=True)
 
 # Gyroscope
 axs[0].plot(common_time, gyro[:, 0], label='Gyro X')
@@ -152,13 +157,17 @@ axs[3].set_ylabel('Motion Acc (m/s²)')
 axs[3].legend()
 axs[3].set_title('Linear Acceleration (Gravity Removed)')
 
-# Euler Angles
-axs[4].plot(common_time, euler_angles[:, 0], label='Roll')
-axs[4].plot(common_time, euler_angles[:, 1], label='Pitch')
-axs[4].plot(common_time, euler_angles[:, 2], label='Yaw')
-axs[4].set_ylabel('Angle (deg)')
-axs[4].legend()
-axs[4].set_title('Euler Angles (Roll, Pitch, Yaw)')
+axs[4].plot(common_time, euler_angles)
+axs[4].set_ylabel('Angle wrapped (deg)')
+axs[4].legend(['Roll', 'Pitch', 'Yaw'])
+axs[4].set_title('Wrapped Euler Angles (EKF)')
+
+euler_unwrapped = np.unwrap(np.radians(euler_angles), axis=0)
+euler_unwrapped_deg = np.degrees(euler_unwrapped)
+axs[5].plot(common_time, euler_unwrapped_deg)
+axs[5].set_ylabel('Angle unwrapped (deg)')
+axs[5].legend(['Roll', 'Pitch', 'Yaw'])
+axs[5].set_title('Unwrapped Euler Angles (EKF)')
 
 plt.grid(True)
 plt.show()
