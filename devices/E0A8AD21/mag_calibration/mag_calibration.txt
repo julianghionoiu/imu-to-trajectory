@@ -1,0 +1,3 @@
+Static 360 rotation along the X, Y and Z axis.
+The goal is to describe a sphere.
+No translation.

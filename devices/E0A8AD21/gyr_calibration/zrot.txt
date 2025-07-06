@@ -1,0 +1,2 @@
+Rotations (360) along the Z axis. 3x clockwise, 3x counterclockwise.
+Pause between a 360 rotation.
