@@ -11,7 +11,7 @@ from scipy.spatial.transform import Rotation as R
 
 
 # === Load Data ===
-base_dir = "./devices/E0A8AD21/gyr_calibration/zrot/"
+base_dir = "./devices/E0A8AD21/gyr_calibration/yrot/"
 acc_df = pd.read_csv(base_dir+"acc.data", sep=r'\s+', names=["timestamp", "acc_x", "acc_y", "acc_z"], header=0)
 gyro_df = pd.read_csv(base_dir+"gyr.data", sep=r'\s+', names=["timestamp", "gyro_x", "gyro_y", "gyro_z"], header=0)
 mag_df = pd.read_csv(base_dir+"mag.data", sep=r'\s+', names=["timestamp", "mag_x", "mag_y", "mag_z"], header=0)

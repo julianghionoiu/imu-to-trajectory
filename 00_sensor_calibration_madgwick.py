@@ -12,7 +12,7 @@ from ahrs.common.orientation import q2R
 from scipy.spatial.transform import Rotation as R
 
 # === Load Data ===
-base_dir = "./devices/E0A8AD21/gyr_calibration/zrot/"
+base_dir = "./devices/E0A8AD21/gyr_calibration/xrot/"
 acc_df = pd.read_csv(base_dir+"acc.data", sep=r'\s+', names=["timestamp", "acc_x", "acc_y", "acc_z"], header=0)
 gyro_df = pd.read_csv(base_dir+"gyr.data", sep=r'\s+', names=["timestamp", "gyro_x", "gyro_y", "gyro_z"], header=0)
 mag_df = pd.read_csv(base_dir+"mag.data", sep=r'\s+', names=["timestamp", "mag_x", "mag_y", "mag_z"], header=0)
@@ -96,6 +96,7 @@ quaternions[0] = acc_mag_to_quaternion(initial_acc, initial_mag)
 # Run filter
 for t in range(1, len(common_time)):
     quaternions[t] = madgwick.updateMARG(quaternions[t-1], gyr=gyro[t], acc=acc[t], mag=mag[t])
+    # quaternions[t] = madgwick.updateIMU(quaternions[t-1], gyr=gyro[t], acc=acc[t])
 
 # === Convert quaternions to Euler angles (roll, pitch, yaw) ===
 # The 'xyz' order corresponds to roll, pitch, yaw (in radians)
