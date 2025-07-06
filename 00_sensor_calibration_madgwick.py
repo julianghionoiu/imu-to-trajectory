@@ -8,9 +8,9 @@ from ahrs.common.orientation import q2R
 from scipy.spatial.transform import Rotation as R
 
 # === Load Data ===
-acc_df = pd.read_csv("./devices/E0A8AD21/sensor_cal_acc.data", sep=r'\s+', names=["timestamp", "acc_x", "acc_y", "acc_z"], header=0)
-gyro_df = pd.read_csv("./devices/E0A8AD21/sensor_cal_gyr.data", sep=r'\s+', names=["timestamp", "gyro_x", "gyro_y", "gyro_z"], header=0)
-mag_df = pd.read_csv("./devices/E0A8AD21/sensor_cal_mag.data", sep=r'\s+', names=["timestamp", "mag_x", "mag_y", "mag_z"], header=0)
+acc_df = pd.read_csv("./devices/E0A8AD21/gyr_calibration/zrot_acc.data", sep=r'\s+', names=["timestamp", "acc_x", "acc_y", "acc_z"], header=0)
+gyro_df = pd.read_csv("./devices/E0A8AD21/gyr_calibration/zrot_gyr.data", sep=r'\s+', names=["timestamp", "gyro_x", "gyro_y", "gyro_z"], header=0)
+mag_df = pd.read_csv("./devices/E0A8AD21/gyr_calibration/zrot_mag.data", sep=r'\s+', names=["timestamp", "mag_x", "mag_y", "mag_z"], header=0)
 
 # Normalize timestamps to seconds since start
 base_time = min(acc_df["timestamp"].min(), gyro_df["timestamp"].min(), mag_df["timestamp"].min())
@@ -44,10 +44,10 @@ def interpolate(df, time_col, data_cols, target_time):
 acc_interp = interpolate(acc_df, "time", ["acc_x", "acc_y", "acc_z"], common_time)
 mag_interp = interpolate(mag_df, "time", ["mag_x", "mag_y", "mag_z"], common_time)
 
-# === Prepare inputs for Madgwick ===
+mag_interp[["mag_x", "mag_y", "mag_z"]] *= 1e5  # Gauss to nT
 gyro = gyro_df[["gyro_x", "gyro_y", "gyro_z"]].values * np.pi / 180.0  # deg/s to rad/s
-acc = acc_interp[["acc_x", "acc_y", "acc_z"]].values
-mag = mag_interp[["mag_x", "mag_y", "mag_z"]].values
+acc = acc_interp[["acc_x", "acc_y", "acc_z"]].values * 9.80665 / 1000.0  # mg to m/s^2
+mag = mag_interp[["mag_x", "mag_y", "mag_z"]].values * 1e5  # Gauss to nT
 dt = np.mean(np.diff(common_time))
 
 # === Run Madgwick filter ===

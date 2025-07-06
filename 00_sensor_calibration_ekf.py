@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
 
 # === Load Data ===
-acc_df = pd.read_csv("./devices/E0A8AD21/sensor_cal_acc.data", sep=r'\s+', names=["timestamp", "acc_x", "acc_y", "acc_z"], header=0)
-gyro_df = pd.read_csv("./devices/E0A8AD21/sensor_cal_gyr.data", sep=r'\s+', names=["timestamp", "gyro_x", "gyro_y", "gyro_z"], header=0)
-mag_df = pd.read_csv("./devices/E0A8AD21/sensor_cal_mag.data", sep=r'\s+', names=["timestamp", "mag_x", "mag_y", "mag_z"], header=0)
+acc_df = pd.read_csv("./devices/E0A8AD21/gyr_calibration/zrot_acc.data", sep=r'\s+', names=["timestamp", "acc_x", "acc_y", "acc_z"], header=0)
+gyro_df = pd.read_csv("./devices/E0A8AD21/gyr_calibration/zrot_gyr.data", sep=r'\s+', names=["timestamp", "gyro_x", "gyro_y", "gyro_z"], header=0)
+mag_df = pd.read_csv("./devices/E0A8AD21/gyr_calibration/zrot_mag.data", sep=r'\s+', names=["timestamp", "mag_x", "mag_y", "mag_z"], header=0)
 
 # Normalize timestamps
 base_time = min(acc_df["timestamp"].min(), gyro_df["timestamp"].min(), mag_df["timestamp"].min())
@@ -30,9 +30,9 @@ def interpolate(df, time_col, data_cols, target_time):
     return pd.DataFrame({col: interp1d(df[time_col], df[col], kind='linear', fill_value='extrapolate')(target_time) for col in data_cols})
 
 common_time = gyro_df["time"].values
-acc = interpolate(acc_df, "time", ["acc_x", "acc_y", "acc_z"], common_time).values
+acc = interpolate(acc_df, "time", ["acc_x", "acc_y", "acc_z"], common_time).values * 9.80665 / 1000.0  # mg to m/s^2
 gyro = interpolate(gyro_df, "time", ["gyro_x", "gyro_y", "gyro_z"], common_time).values * np.pi / 180
-mag = interpolate(mag_df, "time", ["mag_x", "mag_y", "mag_z"], common_time).values
+mag = interpolate(mag_df, "time", ["mag_x", "mag_y", "mag_z"], common_time).values * 1e5  # Gauss to nT
 mag_raw_vals = interpolate(mag_df.assign(mag_x=mag_raw[:,0], mag_y=mag_raw[:,1], mag_z=mag_raw[:,2]),
                            "time", ["mag_x", "mag_y", "mag_z"], common_time).values
 
