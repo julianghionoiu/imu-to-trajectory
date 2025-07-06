@@ -94,15 +94,21 @@ g_ref = np.array([0.0, 0.0, 9.81])
 quaternions = np.zeros((N, 4))
 quaternions[0] = q
 
+m_ref = np.array([1.0, 0.0, 0.0])  # adjust if needed
+R_m = np.eye(3) * 0.3  # magnetometer measurement noise
+
 # === EKF Loop ===
 for t in range(1, N):
+    # === Prediction ===
     q_pred = integrate_gyro(q, gyro[t], dt)
     P = P + Q_k
 
+    # === Accelerometer update ===
     R_mat = quat_to_rotmat(q_pred)
     g_meas = R_mat.T @ g_ref
     y = acc[t] - g_meas
 
+    # Jacobian H for accelerometer
     H = np.zeros((3, 4))
     eps = 1e-5
     for i in range(4):
@@ -118,6 +124,31 @@ for t in range(1, N):
     dq = K @ y
     q = normalize_quaternion(q_pred + dq)
     P = (np.eye(4) - K @ H) @ P
+
+    # === Magnetometer update ===
+    m_meas = mag[t] / np.linalg.norm(mag[t])  # normalize measured field
+    m_pred = quat_to_rotmat(q).T @ m_ref      # predicted field in body frame
+
+    y_m = m_meas - m_pred
+
+    # Jacobian H_m for magnetometer
+    H_m = np.zeros((3, 4))
+    for i in range(4):
+        dq = np.zeros(4)
+        dq[i] = eps
+        q_pert = normalize_quaternion(q + dq)
+        R_pert = quat_to_rotmat(q_pert)
+        m_pert = R_pert.T @ m_ref
+        H_m[:, i] = (m_pert - m_pred) / eps
+
+    S_m = H_m @ P @ H_m.T + R_m
+    K_m = P @ H_m.T @ np.linalg.inv(S_m)
+    dq_m = K_m @ y_m
+
+    q = normalize_quaternion(q + dq_m)
+    P = (np.eye(4) - K_m @ H_m) @ P
+
+    # Store result
     quaternions[t] = q
 
 # === Post-processing ===
