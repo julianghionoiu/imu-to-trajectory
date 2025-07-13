@@ -4,8 +4,8 @@ from ahrs.filters import Madgwick
 
 common_time, mag, acc, gyro = load_from_dir("./devices/E0A8AD21/gyr_calibration/zrot/")
 
-aqua = Madgwick(gyr=gyro, acc=acc, mag=mag, frequency=frequency_from_time(common_time))
-quaternions = aqua.Q
+filter = Madgwick(gyr=gyro, acc=acc, mag=mag, frequency=frequency_from_time(common_time))
+quaternions = filter.Q
 
 motion_acc = remove_gravity(common_time, acc, quaternions)
 

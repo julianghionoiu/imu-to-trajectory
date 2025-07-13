@@ -1,10 +1,10 @@
 
 from lib.utils import remove_gravity, load_from_dir, frequency_from_time, plot_imu_data
-from ahrs.filters import AQUA
+from ahrs.filters import Fourati
 
-common_time, mag, acc, gyro = load_from_dir("./devices/E0A8AD21/gyr_calibration/zrot/")
+common_time, mag, acc, gyro = load_from_dir("./devices/E0A8AD21/gyr_calibration/yrot/")
 
-filter = AQUA(gyr=gyro, acc=acc, mag=mag, frequency=frequency_from_time(common_time))
+filter = Fourati(gyr=gyro, acc=acc, mag=mag, frequency=frequency_from_time(common_time))
 quaternions = filter.Q
 
 motion_acc = remove_gravity(common_time, acc, quaternions)

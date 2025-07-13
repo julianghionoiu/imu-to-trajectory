@@ -1,13 +1,10 @@
 from scipy.spatial.transform import Rotation as R
 
-import pandas as pd
 import numpy as np
-import json
-from scipy.interpolate import interp1d
 
-from lib.utils import remove_gravity, load_from_dir, frequency_from_time, plot_imu_data
+from lib.utils import load_from_dir, plot_imu_data
 
-common_time, mag, acc, gyro = load_from_dir("./devices/E0A8AD21/gyr_calibration/zrot/")
+common_time, mag, acc, gyro = load_from_dir("./devices/E0A8AD21/gyr_calibration/xrot/")
 
 
 dt = np.mean(np.diff(common_time))
