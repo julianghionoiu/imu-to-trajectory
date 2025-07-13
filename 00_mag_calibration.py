@@ -62,8 +62,11 @@ def store_calibration_parameters(input_file, local_bias, local_scale_matrix):
         "scale_matrix": local_scale_matrix.tolist()
     }
 
-    # Save JSON next to input file
-    output_path = os.path.splitext(input_file)[0] + "_parameters.json"
+    # Save JSON one level above the input file
+    input_dir = os.path.dirname(os.path.abspath(input_file))
+    parent_dir = os.path.dirname(input_dir)
+    base_name = os.path.splitext(os.path.basename(input_file))[0]
+    output_path = os.path.join(parent_dir, f"{base_name}_parameters.json")
     with open(output_path, "w") as f:
         json.dump(calibration_data, f, indent=4)
 
