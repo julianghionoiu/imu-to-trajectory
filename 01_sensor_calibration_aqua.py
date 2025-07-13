@@ -61,20 +61,8 @@ dt = np.mean(np.diff(common_time))
 
 # === Run Aqua filter ===
 # Initialize filter
-aqua = AQUA(sampleperiod=dt)
-
-# Allocate array for quaternions
-quaternions = np.zeros((len(common_time), 4))
-# --- With this: ---
-initial_acc = acc[0]
-initial_mag = mag[0]
-famc = FAMC(acc=acc, mag=mag)
-quaternions[0] = famc.Q[0]   # Estimate attitude as quaternion
-
-# Run filter
-for t in range(1, len(common_time)):
-    # quaternions[t] = aqua.updateMARG(quaternions[t-1], gyr=gyro[t], acc=acc[t], mag=mag[t])
-    quaternions[t] = aqua.updateIMU(quaternions[t-1], gyr=gyro[t], acc=acc[t])
+aqua = AQUA(gyr=gyro, acc=acc, mag=mag, sampleperiod=dt)
+quaternions = aqua.Q
 
 # === Convert quaternions to Euler angles (roll, pitch, yaw) ===
 # The 'xyz' order corresponds to roll, pitch, yaw (in radians)

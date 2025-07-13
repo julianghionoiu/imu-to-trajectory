@@ -59,16 +59,10 @@ acc = acc_interp[["acc_x", "acc_y", "acc_z"]].values * 9.80665 / 1000.0  # mg to
 mag = mag_interp[["mag_x", "mag_y", "mag_z"]].values * 1e5  # Gauss to nT
 dt = np.mean(np.diff(common_time))
 
-# === Run Aqua filter ===
-# Allocate array for quaternions
-quaternions = np.zeros((len(common_time), 4))
-# --- With this: ---
-ekf = EKF()
-quaternions[0] = acc2q(acc[0])
-
-# Run filter
-for t in range(1, len(common_time)):
-    quaternions[t] = ekf.update(quaternions[t-1], gyr=gyro[t], acc=acc[t])
+# === Run the filter ===
+ekf = EKF(gyr=gyro, acc=acc, mag=mag)
+print (ekf.Q.shape)
+quaternions = ekf.Q
 
 # === Convert quaternions to Euler angles (roll, pitch, yaw) ===
 # The 'xyz' order corresponds to roll, pitch, yaw (in radians)

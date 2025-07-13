@@ -57,46 +57,8 @@ dt = np.mean(np.diff(common_time))
 
 # === Run Madgwick filter ===
 # Initialize filter
-madgwick = Madgwick(sampleperiod=dt)
-
-def acc_mag_to_quaternion(acc, mag):
-    """
-    Estimate initial orientation quaternion from accelerometer and magnetometer.
-    acc: (3,) array, accelerometer reading (m/s^2)
-    mag: (3,) array, magnetometer reading (uT)
-    Returns: (4,) array, quaternion [x, y, z, w] (scipy format)
-    """
-    # Normalize accelerometer (gravity direction)
-    g = acc / np.linalg.norm(acc)
-    # Normalize magnetometer
-    m = mag / np.linalg.norm(mag)
-
-    # East vector (y axis): e = (m x g)
-    e = np.cross(m, g)
-    e /= np.linalg.norm(e)
-    # North vector (x axis): n = (g x e)
-    n = np.cross(g, e)
-    n /= np.linalg.norm(n)
-    # Down vector (z axis): -g
-
-    # Rotation matrix: columns are [n, e, -g]
-    R_mat = np.column_stack((n, e, -g))
-    # Convert to quaternion (scipy expects [x, y, z, w])
-    quat = R.from_matrix(R_mat).as_quat()
-    return quat
-
-
-# Allocate array for quaternions
-quaternions = np.zeros((len(common_time), 4))
-# --- With this: ---
-initial_acc = acc[0]
-initial_mag = mag[0]
-quaternions[0] = acc_mag_to_quaternion(initial_acc, initial_mag)
-
-# Run filter
-for t in range(1, len(common_time)):
-    quaternions[t] = madgwick.updateMARG(quaternions[t-1], gyr=gyro[t], acc=acc[t], mag=mag[t])
-    # quaternions[t] = madgwick.updateIMU(quaternions[t-1], gyr=gyro[t], acc=acc[t])
+madgwick = Madgwick(gyr=gyro, acc=acc, mag=mag, sampleperiod=dt)
+quaternions = madgwick.Q
 
 # === Convert quaternions to Euler angles (roll, pitch, yaw) ===
 # The 'xyz' order corresponds to roll, pitch, yaw (in radians)
