@@ -8,7 +8,29 @@ from scipy.interpolate import interp1d
 from scipy.spatial.transform import Rotation as R
 
 import matplotlib
+
+from lib.mag import compute_calibration_parameters, calibrate_np
+
 matplotlib.use('TkAgg')
+
+def calibrate_mag_from_data(mag_df):
+    bias, scale_matrix = compute_calibration_parameters(mag_df)
+    return calibrate_np(mag_df, bias, scale_matrix)
+
+def calibrate_mag_from_file(mag_df):
+    # === Load Magnetometer Calibration ===
+    with open("./devices/E0A8AD21/mag_calibration_parameters.json", "r") as f:
+        mag_cal = json.load(f)
+    bias = np.array(mag_cal["bias"])
+    scale_matrix = np.array(mag_cal["scale_matrix"])
+    scale_inv = np.linalg.inv(np.linalg.cholesky(scale_matrix))
+    # Apply calibration to MAG
+    mag_raw = mag_df[["mag_x", "mag_y", "mag_z"]].values
+    mag_corrected = (scale_inv @ (mag_raw - bias).T).T
+    mag_df_copy = mag_df.copy()
+    mag_df_copy[["mag_x", "mag_y", "mag_z"]] = mag_corrected
+    return mag_df_copy
+    
 
 def load_from_dir(base_dir=None):
     global common_time, gyro, acc, mag, dt
@@ -21,16 +43,8 @@ def load_from_dir(base_dir=None):
     acc_df["time"] = (acc_df["timestamp"] - base_time) * 1e-9
     gyro_df["time"] = (gyro_df["timestamp"] - base_time) * 1e-9
     mag_df["time"] = (mag_df["timestamp"] - base_time) * 1e-9
-    # === Load Magnetometer Calibration ===
-    with open("./devices/E0A8AD21/mag_calibration_parameters.json", "r") as f:
-        mag_cal = json.load(f)
-    bias = np.array(mag_cal["bias"])
-    scale_matrix = np.array(mag_cal["scale_matrix"])
-    scale_inv = np.linalg.inv(np.linalg.cholesky(scale_matrix))
-    # Apply calibration to MAG
-    mag_raw = mag_df[["mag_x", "mag_y", "mag_z"]].values
-    mag_corrected = (scale_inv @ (mag_raw - bias).T).T
-    mag_df[["mag_x", "mag_y", "mag_z"]] = mag_corrected
+
+    mag_df = calibrate_mag_from_file(mag_df)
     # === Interpolate all data to gyro timestamps ===
     common_time = gyro_df["time"].values
 
@@ -41,13 +55,22 @@ def load_from_dir(base_dir=None):
             interp_data[col] = f(target_time)
         return pd.DataFrame(interp_data)
 
-    acc_interp = interpolate(acc_df, "time", ["acc_x", "acc_y", "acc_z"], common_time)
-    mag_interp = interpolate(mag_df, "time", ["mag_x", "mag_y", "mag_z"], common_time)
-    mag_interp[["mag_x", "mag_y", "mag_z"]] *= 1e5  # Gauss to nT
-    gyro = gyro_df[["gyro_x", "gyro_y", "gyro_z"]].values * np.pi / 180.0  # deg/s to rad/s
-    acc = acc_interp[["acc_x", "acc_y", "acc_z"]].values * 9.80665 / 1000.0  # mg to m/s^2
-    mag = mag_interp[["mag_x", "mag_y", "mag_z"]].values * 1e5  # Gauss to nT
-    return common_time, mag, acc, gyro
+    gyro = gyro_df[["gyro_x", "gyro_y", "gyro_z"]].values
+    acc_interp = interpolate(acc_df, "time", ["acc_x", "acc_y", "acc_z"], common_time).values
+    mag_interp = interpolate(mag_df, "time", ["mag_x", "mag_y", "mag_z"], common_time).values
+    return common_time, mag_interp, acc_interp, gyro
+
+def gyr_convert_deg_to_rads(values):
+    return np.radians(values)
+
+def acc_convert_mg_to_mps2(values):
+    return values * 9.80665 / 1000.0  # mg to m/s^2
+
+def mag_convert_gauss_to_nt(values):
+    return values * 1e5  # Gauss to nT
+
+def mag_convert_gauss_to_mt(values):
+    return values * 0.1  # Gauss to mT
 
 def frequency_from_time(common_time=None):
     dt = np.diff(common_time)
@@ -57,7 +80,8 @@ def remove_gravity(common_time=None, acc=None, quaternions=None):
     gravity_sensor = np.zeros_like(acc)
     for i in range(len(common_time)):
         Rm = q2R(quaternions[i])  # Converts quaternion to rotation matrix
-        g = Rm.T @ np.array([0, 0, 9.81])  # gravity vector in sensor frame
+        # g = Rm.T @ np.array([0, 0, 9.81])  # gravity vector in sensor frame
+        g = Rm.T @ np.array([0, 0, 10])  # gravity vector in sensor frame
         gravity_sensor[i] = g
     return acc - gravity_sensor
 
@@ -87,7 +111,7 @@ def plot_imu_data(common_time=None, gyro=None, acc=None, mag=None, motion_acc=No
     # Magnetometer (cal)
     axs[2].plot(common_time, mag[:, 0], label='Mag X (cal)')
     axs[2].plot(common_time, mag[:, 1], label='Mag Y (cal)')
-    axs[2].plot(common_time, mag[:, 2], label='Mag Z (ca)')
+    axs[2].plot(common_time, mag[:, 2], label='Mag Z (cal)')
     axs[2].set_ylabel('Magnetic Field (uT)')
     axs[2].set_xlabel('Time (s)')
     axs[2].legend()
