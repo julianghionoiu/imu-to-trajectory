@@ -3,7 +3,7 @@ from lib.utils import remove_gravity, load_from_dir, frequency_from_time, plot_i
     acc_convert_mg_to_mps2, gyr_convert_deg_to_rads, mag_convert_gauss_to_mt
 from ahrs.filters import Mahony
 
-common_time, mag, acc, gyro = load_from_dir("./devices/E0A8AD21/gyr_calibration/yrot/")
+common_time, mag, acc, gyro = load_from_dir("./devices/E0A8AD21/gyr_calibration/xrot/")
 
 gyro = gyr_convert_deg_to_rads(gyro)
 acc = acc_convert_mg_to_mps2(acc)

@@ -85,6 +85,14 @@ def remove_gravity(common_time=None, acc=None, quaternions=None):
         gravity_sensor[i] = g
     return acc - gravity_sensor
 
+def remove_gravity_NED(common_time=None, acc=None, quaternions=None):
+    gravity_sensor = np.zeros_like(acc)
+    for i in range(len(common_time)):
+        R = q2R(quaternions[i])  # world → body rotation
+        # Gravity points down in ENU
+        g = R @ np.array([0, 0, -9.81])  # gravity vector in body/sensor frame
+        gravity_sensor[i] = g
+    return acc - gravity_sensor
 
 def plot_imu_data(common_time=None, gyro=None, acc=None, mag=None, motion_acc=None, quaternions=None):
     # === Convert quaternions to Euler angles (roll, pitch, yaw) ===
