@@ -11,7 +11,7 @@ acc = acc_convert_mg_to_mps2(acc)
 mag = mag_convert_gauss_to_mt(mag)
 filter = Madgwick(gyr=gyro, acc=acc, mag=mag,
                   frequency=frequency_from_time(common_time), 
-                  gain = 0.05)
+                  gain = 0.1)
 quaternions = filter.Q
 
 motion_acc = remove_gravity(common_time, acc, quaternions)

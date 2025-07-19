@@ -81,16 +81,7 @@ def remove_gravity(common_time=None, acc=None, quaternions=None):
     for i in range(len(common_time)):
         Rm = q2R(quaternions[i])  # Converts quaternion to rotation matrix
         # g = Rm.T @ np.array([0, 0, 9.81])  # gravity vector in sensor frame
-        g = Rm.T @ np.array([0, 0, 10])  # gravity vector in sensor frame
-        gravity_sensor[i] = g
-    return acc - gravity_sensor
-
-def remove_gravity_NED(common_time=None, acc=None, quaternions=None):
-    gravity_sensor = np.zeros_like(acc)
-    for i in range(len(common_time)):
-        R = q2R(quaternions[i])  # world → body rotation
-        # Gravity points down in ENU
-        g = R @ np.array([0, 0, -9.81])  # gravity vector in body/sensor frame
+        g = Rm.T @ np.array([0, 0, 9.81])  # gravity vector in sensor frame
         gravity_sensor[i] = g
     return acc - gravity_sensor
 

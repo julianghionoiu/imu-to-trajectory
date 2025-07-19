@@ -25,6 +25,5 @@ pip install -r requirements.txt
 | AHRS Short Name | Algorithm Name       | Description                                                  | Obs                               |
 |-----------------|----------------------|--------------------------------------------------------------|-----------------------------------|
 | Aqua            | Algebraic Quaternion | Estimates a quaternion from inertial+magnetic observations   | Too much linear acceleration      |
-| ChatGPT gen     | Vibe coded Kalman    | It seems to be like a Kalman but ignoring Mag                | Surprisingly well but ignores MAG |
 | Fourati         | Fourati              | Estimates based on the time integral of the angular velocity | Nope. Has growing error gain      |
 | Mahony          | Mahony Filter        | Quaternion-based algorithm for attitude estimation.          | ACC flapping around X                                                 |
