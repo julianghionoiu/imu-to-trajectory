@@ -7,6 +7,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Quick run:
+```shell
+python 01_sensor_calibration_ekf.py
+```
 
 ## IMU integration algo assessment
 
