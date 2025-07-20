@@ -1,7 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from numpy.linalg import inv
-from scipy.linalg import sqrtm
 import json
 import sys
 import os

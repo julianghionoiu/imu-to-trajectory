@@ -18,7 +18,6 @@ python 01_sensor_calibration_ekf.py
 
 | AHRS Short Name | Algorithm Name       | Description                                                  | Obs                                                                   |
 |-----------------|----------------------|--------------------------------------------------------------|-----------------------------------------------------------------------|
-| ChatGPT gen     | Vibe coded Kalman    | It seems to be like a Kalman but ignoring Mag                | Surprisingly well but ignores MAG                                     |
 | Complementary   | Complementary        | Combines accelerometer and gyroscope data for orientation.   | Works pretty well, low linear acc, but struggles with one Z dimension |
 | EKF             | Extended Kalman      | Probabilistic approach to estimate system states.            | Very good attitude detection, but picks up ACC from rotation          |
 | Madgwick        | Madgwick Filter      | Sensor fusion algorithm specifically for IMU data.           | ACC rotating around 2.5. Has a gain that allows us to tweak.          |
@@ -29,5 +28,6 @@ python 01_sensor_calibration_ekf.py
 | AHRS Short Name | Algorithm Name       | Description                                                  | Obs                               |
 |-----------------|----------------------|--------------------------------------------------------------|-----------------------------------|
 | Aqua            | Algebraic Quaternion | Estimates a quaternion from inertial+magnetic observations   | Too much linear acceleration      |
+| ChatGPT gen     | Vibe coded Kalman    | It seems to be like a Kalman but ignoring Mag                | Surprisingly well but ignores MAG                                     |
 | Fourati         | Fourati              | Estimates based on the time integral of the angular velocity | Nope. Has growing error gain      |
 | Mahony          | Mahony Filter        | Quaternion-based algorithm for attitude estimation.          | ACC flapping around X                                                 |
