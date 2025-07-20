@@ -13,7 +13,7 @@ mag = mag_convert_gauss_to_mt(mag)
 # default values [0.3**2, 0.5**2, 0.8**2]
 filter = EKF(gyr=gyro, acc=acc, mag=mag, frequency=frequency_from_time(common_time),
              frame='ENU',
-             magnetic_ref=0,
+             magnetic_ref=LONDON_MAG_ENU,
              var_gyr=0.5**2,
              var_acc=0.1**2,
              var_mag=0.8**2
