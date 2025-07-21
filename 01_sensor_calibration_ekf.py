@@ -1,6 +1,4 @@
 from ahrs.filters import EKF
-from ahrs.utils import WMM
-import numpy as np
 
 from lib.utils import remove_gravity, load_from_dir, frequency_from_time, plot_imu_data, gyr_convert_deg_to_rads, \
     acc_convert_mg_to_mps2, mag_convert_gauss_to_mt
